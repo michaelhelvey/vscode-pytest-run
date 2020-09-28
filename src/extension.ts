@@ -78,7 +78,7 @@ type TestCmdOptions = {
 
 function generateTestTextFromLine(opts: TestCmdOptions) {
 	if (opts.runFile) {
-		return `pipenv run pytest -k ${opts.filePath}`
+		return `pipenv run pytest ${opts.filePath}`
 	} else {
 		if (!opts.line) {
 			return
