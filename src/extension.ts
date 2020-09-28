@@ -12,48 +12,91 @@ export function activate(context: vscode.ExtensionContext) {
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with registerCommand
 	// The commandId parameter must match the command field in package.json
-	let disposable = vscode.commands.registerCommand("pytest-run.runTest", () => {
-		// The code you place here will be executed every time your command is executed
-		const editor = vscode.window.activeTextEditor!
-		const document = editor.document
-		const filePath = document.fileName
+	const runTestCmd = vscode.commands.registerCommand(
+		"pytest-run.runTest",
+		() => {
+			const editor = vscode.window.activeTextEditor!
+			const document = editor.document
+			const filePath = document.fileName
 
-		if (document.languageId !== "python") {
-			return
+			if (document.languageId !== "python") {
+				return
+			}
+
+			const currentPosition = editor?.selection.active
+			const lineText = document.lineAt(currentPosition.line).text
+
+			const terminal = vscode.window.activeTerminal
+			const testText = generateTestTextFromLine({
+				filePath,
+				line: lineText,
+				runFile: false,
+			})
+			if (!testText) {
+				vscode.window.showInformationMessage("Not on a test func def line")
+			} else {
+				terminal?.sendText(testText)
+			}
 		}
+	)
 
-		const currentPosition = editor?.selection.active
-		const lineText = document.lineAt(currentPosition.line).text
+	const runTestFileCmd = vscode.commands.registerCommand(
+		"pytest-run.fileRun",
+		() => {
+			const editor = vscode.window.activeTextEditor!
+			const document = editor.document
+			const filePath = document.fileName
 
-		const terminal = vscode.window.activeTerminal
+			if (document.languageId !== "python") {
+				return
+			}
+			const terminal = vscode.window.activeTerminal
 
-		const testText = generateTestTextFromLine(lineText, filePath)
-		if (!testText) {
-			vscode.window.showInformationMessage("Not on a test func def line")
-		} else {
-			terminal?.sendText(testText)
+			const testText = generateTestTextFromLine({
+				runFile: true,
+				filePath,
+			})
+			if (testText) {
+				terminal?.sendText(testText)
+			}
 		}
+	)
+	console.log(runTestCmd, runTestFileCmd)
 
-		// Display a message box to the user
-	})
-
-	context.subscriptions.push(disposable)
+	context.subscriptions.push(runTestCmd)
+	context.subscriptions.push(runTestFileCmd)
 }
 
 // this method is called when your extension is deactivated
 export function deactivate() {}
 
-function generateTestTextFromLine(line: string | undefined, fileName: string) {
-	if (!line) {
-		return
-	}
+type TestCmdOptions = {
+	runFile: boolean
+	filePath: string
+	line?: string | undefined
+}
 
+function generateTestTextFromLine(opts: TestCmdOptions) {
+	if (opts.runFile) {
+		return `pipenv run pytest -k ${opts.filePath}`
+	} else {
+		if (!opts.line) {
+			return
+		}
+		const funcName = getPythonFuncNameFromLine(opts.line)
+		if (funcName) {
+			return `pipenv run pytest -k "${funcName}" ${opts.filePath}`
+		}
+	}
+}
+
+function getPythonFuncNameFromLine(line: string) {
 	const regex = new RegExp(/def (\w+)\(/)
 	const options = regex.exec(line)
 	if (options === null || options.length < 2) {
 		return
 	}
 
-	const func_name = options[1]
-	return `pipenv run pytest -k "${func_name}" ${fileName}`
+	const funcName = options[1]
+	return funcName
 }

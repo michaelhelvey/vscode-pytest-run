@@ -11,14 +11,21 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:pytest-run.runTest"
+		"onCommand:pytest-run.runTest",
+		"onCommand:pytest-run.fileRun"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
 		"commands": [
 			{
+				"command": "pytest-run.fileRun",
+				"title": "Pytest: Test Current File",
+				"when": "editorLangId == python"
+			},
+			{
 				"command": "pytest-run.runTest",
-				"title": "Pytest: Run Current Test"
+				"title": "Pytest: Run Current Test",
+				"when": "editorLangId == python"
 			}
 		]
 	},
