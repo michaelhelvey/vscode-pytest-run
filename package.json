@@ -3,6 +3,7 @@
 	"displayName": "Pytest Run",
 	"description": "run a single pytest test with a shortcut",
 	"version": "0.0.1",
+	"license": "UNLICENSED",
 	"engines": {
 		"vscode": "^1.49.0"
 	},
@@ -27,7 +28,9 @@
 		"lint": "eslint src --ext ts",
 		"watch": "tsc -watch -p ./",
 		"pretest": "yarn run compile && yarn run lint",
-		"test": "node ./out/test/runTest.js"
+		"test": "node ./out/test/runTest.js",
+		"local-publish": "yarn _clean_ext && yarn compile && cp -r ~/dev/js/pytest-run ~/.vscode/extensions",
+		"_clean_ext": "rm -rf ~/.vscode/extensions/pytest-run"
 	},
 	"devDependencies": {
 		"@types/vscode": "^1.49.0",

@@ -16,6 +16,7 @@ export function activate(context: vscode.ExtensionContext) {
 		// The code you place here will be executed every time your command is executed
 		const editor = vscode.window.activeTextEditor!
 		const document = editor.document
+		const filePath = document.fileName
 
 		if (document.languageId !== "python") {
 			return
@@ -26,7 +27,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 		const terminal = vscode.window.activeTerminal
 
-		const testText = generateTestTextFromLine(lineText)
+		const testText = generateTestTextFromLine(lineText, filePath)
 		if (!testText) {
 			vscode.window.showInformationMessage("Not on a test func def line")
 		} else {
@@ -42,7 +43,7 @@ export function activate(context: vscode.ExtensionContext) {
 // this method is called when your extension is deactivated
 export function deactivate() {}
 
-function generateTestTextFromLine(line?: string) {
+function generateTestTextFromLine(line: string | undefined, fileName: string) {
 	if (!line) {
 		return
 	}
@@ -54,5 +55,5 @@ function generateTestTextFromLine(line?: string) {
 	}
 
 	const func_name = options[1]
-	return `pytest -k "${func_name}"`
+	return `pipenv run pytest -k "${func_name}" ${fileName}`
 }
